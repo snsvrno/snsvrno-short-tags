@@ -1,7 +1,7 @@
 {
 	"id": "snsvrno-short-tags",
 	"name": "Short Tags",
-	"version": "0.0.0",
+	"version": "0.0.2",
 	"minAppVersion": "0.15.0",
 	"description": "Hides tag parents in preview mode.",
 	"author": "snsvrno",
