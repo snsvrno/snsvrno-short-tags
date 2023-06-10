@@ -2,10 +2,10 @@ import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Set
 
 // SETTINGS ///////////////////////////
 
-interface SnsvrnoSettings {
+interface SnsvrnoTagsSettings {
 	tags: Array<string>;
-	showHash: Bool;
-	showOneWord: Bool;
+	showHash: boolean;
+	showOneWord: boolean;
 }
 
 const DEFAULT_SETTINGS: SnsvrnoTagsSettings = {
@@ -56,7 +56,7 @@ export default class SnsvrnoTags extends Plugin {
 	 * checks if the tag fits any of the defined shortening requirements
 	 * and then shortens it
 	 */
-	formatTag(element) {
+	formatTag(element : any) {
 
 		var name = element.text;
 		if (name.substring(0,1) == "#") name = name.substring(1);
