@@ -1,0 +1,19 @@
+.snsvrno-tags-example {
+	padding-bottom: 10px;
+	display: flex;
+	align-items: center;
+}
+
+.snsvrno-tags-example a {
+	font-size: 0.85em;
+}
+
+.snsvrno-tags-example-container {
+	margin-left: 8px;
+}
+
+.snsvrno-tags-example-text {
+	margin: 0px;
+	color: var(--blockquote-color);
+	font-size: 0.75em;
+}
