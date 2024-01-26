@@ -8,10 +8,13 @@ A configurable obsidian plugin that changes the way tags are displayed in previe
 - Hide selected parents on nested tags.
 
 Preview
+
 ![](images/preview.png)
 
 Editor
-![](imgs/editor.png)
+
+![](images/edit.png)
 
 Settings
-![](imgs/settings.png)
+
+![](images/settings.png)
