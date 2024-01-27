@@ -1,19 +1,25 @@
 .snsvrno-tags-example {
-	padding-bottom: 10px;
 	display: flex;
 	align-items: center;
 }
 
 .snsvrno-tags-example a {
-	font-size: 0.85em;
+	font-size: 1.0em;
 }
 
 .snsvrno-tags-example-container {
 	margin-left: 8px;
+	display: flex;
+	flex-flow: wrap;
 }
 
 .snsvrno-tags-example-text {
 	margin: 0px;
-	color: var(--blockquote-color);
-	font-size: 0.75em;
+	color: var(--code-comment);
+	font-size: 1.0em;
+}
+
+.snsvrno-tags-matches-count {
+	font-size: 1.0em;
+	font-family: var(--font-monospace);
 }

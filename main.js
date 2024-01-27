@@ -85,7 +85,7 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 	opShowHash(el) {
 		let exampleTag;
 
-		new obsidian.Setting(el)
+		let setting = new obsidian.Setting(el)
 			.setName("Show Hash")
 			.setDesc("Show the '#' for tags in preview.")
 			.addToggle(t => t
@@ -99,7 +99,7 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 
 		// the preview showing if and how the hash will be
 		// displayed
-		let previewBlock = this.createExampleBlock(el);
+		let previewBlock = this.createExampleBlock(setting.descEl);
 		let previewTagName = Object.keys(app.metadataCache.getTags())[0];
 		let previewTag = previewBlock.createEl("a", {
 			text: this.formatTagOnShowHash(previewTagName ? previewTagName : "#example/tag")
@@ -149,18 +149,22 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 				});
 
 			// building the preview for this definition
-			let preview = this.createExampleBlock(setting.infoEl);
+			let preview = this.createExampleBlock(setting.descEl);
 			let defSections = fn.splitDef(tagDef);
 			// match them to the database
 			let foundMatch = false;
+			let matchCount = 0;
 			for (let i = 0; i < vaultTags.length; i++) {
 				if (fn.tagSplitMatch(defSections, vaultTags[i])) {
-					let newTag = fn.tagSplitShorten(defSections, vaultTags[i]);
-					this.createTagEl(preview, this.formatTagOnShowHash(vaultTags[i]));
-					preview.createEl("span", { text: "=>" });
-					this.createTagEl(preview,this.formatTagOnShowHash(newTag));
-					foundMatch = true;
-					break;
+					if (foundMatch) matchCount += 1;
+					else {
+						let newTag = fn.tagSplitShorten(defSections, vaultTags[i]);
+						this.createTagEl(preview, this.formatTagOnShowHash(vaultTags[i]));
+						preview.createEl("span", { text: "=>" });
+						this.createTagEl(preview,this.formatTagOnShowHash(newTag));
+						foundMatch = true;
+						matchCount = 1;
+					}
 				}
 			}
 
@@ -169,6 +173,11 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 			if (!foundMatch) {
 				let msg = preview.createEl("span", {text:"No matching tags currently in vault."});
 				Object.assign(msg, {className:"setting-item-description"});
+			} else {
+				let matchesEl = this
+					.createExampleBlock(setting.descEl, "Unique tag matches:")
+					.createEl("span", { text: matchCount })
+				Object.assign(matchesEl, {className: "snsvrno-tags-matches-count"});
 			}
 		});
 
@@ -190,18 +199,18 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 
 	// creates the basic elements for the "preview" that is displayed
 	// under setting to immediately show their impact.
-	createExampleBlock(el) {
+	createExampleBlock(el, text) {
 		let example = el.createEl("span");
 		Object.assign(example, {
 			className: "snsvrno-tags-example",
 		});
 
-		let exampletext = example.createEl("p", { text: "Preview:" });
+		let exampletext = example.createEl("p", { text: text ? text : "Preview:" });
 		Object.assign(exampletext, {
 			className: "snsvrno-tags-example-text",
 		});
 
-		let examplecontainer = example.createEl("span");
+		let examplecontainer = example.createEl("div");
 		Object.assign(examplecontainer, {
 			className: "snsvrno-tags-example-container",
 		});
