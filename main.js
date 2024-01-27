@@ -1,6 +1,6 @@
-var obsidian = require('obsidian');
+let obsidian = require('obsidian');
 
-var DEFAULT_SETTINGS = {
+let DEFAULT_SETTINGS = {
 	showHash: true,
 	tags: []
 };
@@ -8,9 +8,10 @@ var DEFAULT_SETTINGS = {
 //////////////////////////////////////////////////////////////
 
 class SnsvrnoTagsPlugin extends obsidian.Plugin {
-	async onload() {
-		console.log("loaded the plugin");
 
+	// CORE //////////////////////
+
+	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new SnsvrnoTagsSettingsTab(this.app, this));
 
@@ -20,10 +21,10 @@ class SnsvrnoTagsPlugin extends obsidian.Plugin {
 	}
 
 	onunload() {
-		console.log("unloaded the plugin");
+		// nothing to unload for now?
 	}
 
-	///////
+	// SETTINGS RELATED /////
 
 	async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -33,31 +34,30 @@ class SnsvrnoTagsPlugin extends obsidian.Plugin {
     await this.saveData(this.settings);
 	}
 
-	/////
+	// PLUGIN SPECIFIC ////////////
+
+	// runs the processing on the given tag, will check that
+	// it is actually a tag before doing anything.
+	//
+	// el : HTMLElement - the tag in question, should be an 'a.tag'
 	formatTag(el) {
+
 		///////////////////////////////////
 		// double checks that these are tags, will not
 		// continue processing if its not
 		if (el.text.substring(0,1) != "#") return;
 
 		/////////////////////////////////
-		// processing the tags
-		for (var i = 0; i < this.settings.tags.length; i++) {
-			var reftag = this.settings.tags[i].substring(1).split("/");
+		// shortens the tag if applicable
+		for (let i = 0; i < this.settings.tags.length; i++) {
+			// [OTGI0004] look at caching these so that we are not calculating
+			// it for every page and tag
+			let reftag = this.settings.tags[i].substring(1).split("/");
 
 			if (fn.tagSplitMatch(reftag,el.text)) {
 				el.text = fn.tagSplitShorten(reftag, el.text);
 				break;
 			}
-
-/*
-			if (reftag.length + 1 < el.text.length
-			&& el.text.substring(1, reftag.length + 1) == reftag) {
-				// +2 because accounting for the # and the /
-				el.text = el.text.substring(reftag.length+2);
-				break; // because we will only match with one
-			}
-*/
 		}
 
 		//////////////////////////////////
@@ -76,27 +76,18 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 	}
 
 	display(focusId) {
-		var el = this.containerEl;
-		el.empty();
-
-		this.opShowHash(el);
-		this.opTags(el, focusId);
+		this.containerEl.empty();
+		this.opShowHash(this.containerEl);
+		this.opTags(this.containerEl, focusId);
 	}
 
 	////////////////////////////////////
 	opShowHash(el) {
-		var exampleTag;
+		let exampleTag;
 
-		// used so that we can update the example when the options are changed
-		// [todo) clean this up because now we update the whole display
-		// and don't use this anymore
-		var updateShowHashExamples = () => {
-			exampleTag.text = (this.plugin.settings.showHash ? "#" : "") + "nested/tag";
-		}
-
-		var showHashOption = new obsidian.Setting(el)
+		new obsidian.Setting(el)
 			.setName("Show Hash")
-			.setDesc("Show the '#' for tags in preview")
+			.setDesc("Show the '#' for tags in preview.")
 			.addToggle(t => t
 				.setValue(this.plugin.settings.showHash)
 				.onChange(async (v) => {
@@ -106,32 +97,37 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 				})
 			);
 
-		// the example preview
-		var example = this.createExampleBlock(el);
-		var exampleTag = example.createEl("a")
-		Object.assign(exampleTag, {
+		// the preview showing if and how the hash will be
+		// displayed
+		let previewBlock = this.createExampleBlock(el);
+		let previewTagName = Object.keys(app.metadataCache.getTags())[0];
+		let previewTag = previewBlock.createEl("a", {
+			text: this.formatTagOnShowHash(previewTagName ? previewTagName : "#example/tag")
+		});
+		Object.assign(previewTag, {
 			className: "tag"
 		});
-
-		updateShowHashExamples();
 	}
 
-	////////////////////////////////////
+	// el : HTMLElement - the container element that holds the settings items
+	// ?focusId : string - the name of the tag item that requested a "diplay()"
+	//                     update. (used so that we can have live previews of the
+	//                     settings update as the user types)
 	opTags(el, focusId) {
 
-		var option = new obsidian.Setting(el)
+		new obsidian.Setting(el)
 			.setName("Tags")
 			.setDesc("List of tag parents for shortening in preview mode.");
 
 		// creates a new line for each user tag setting
-		var tags = Object.keys(app.metadataCache.getTags());
-		this.plugin.settings.tags.forEach((tag) => {
-			var index = this.plugin.settings.tags.indexOf(tag);
+		let vaultTags = Object.keys(app.metadataCache.getTags());
+		this.plugin.settings.tags.forEach((tagDef) => {
+			let index = this.plugin.settings.tags.indexOf(tagDef);
 
-			var div = el.createDiv();
-			var setting = new obsidian.Setting(div)
+			let div = el.createDiv();
+			let setting = new obsidian.Setting(div)
 				.addText(txt => {
-					txt.setValue(tag);
+					txt.setValue(tagDef);
 					txt.onChange(async (v) => {
 						this.plugin.settings.tags[index] = v;
 						this.plugin.saveSettings();
@@ -139,12 +135,12 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 						});
 					// focus on this text box so we can continue to type
 					// and update the previews
-					if (focusId == "tags_"+tag) { txt.inputEl.focus(); }
+					if (focusId == "tags_"+tagDef) { txt.inputEl.focus(); }
 					}
 				)
 				.addButton(btn => {
 					btn.setButtonText("Remove");
-					btn.setTooltip("Remove rule '" + tag + "'");
+					btn.setTooltip("Remove rule '" + tagDef + "'");
 					btn.onClick(async (_) => {
 						this.plugin.settings.tags.splice(index, 1);
 						this.plugin.saveSettings();
@@ -152,38 +148,36 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 					});
 				});
 
-			var preview = this.createExampleBlock(setting.infoEl);
-			// figure out the tags
-			var split;
-			if (tag.substring(0,1) == "#") split = tag.substring(1).split("/");
-			else split = tag.split("/");
-			// get rid of the "" at the end if they write "#tag/"
-			if (split[split.length-1] == "") split.pop();
+			// building the preview for this definition
+			let preview = this.createExampleBlock(setting.infoEl);
+			let defSections = fn.splitDef(tagDef);
 			// match them to the database
-			var foundMatch = false;
-			for (var i = 0; i < tags.length; i++) {
-				if (fn.tagSplitMatch(split, tags[i])) {
-					var newTag = fn.tagSplitShorten(split, tags[i]);
-					this.createTagEl(preview, this.formatTagForPreview(tags[i]));
+			let foundMatch = false;
+			for (let i = 0; i < vaultTags.length; i++) {
+				if (fn.tagSplitMatch(defSections, vaultTags[i])) {
+					let newTag = fn.tagSplitShorten(defSections, vaultTags[i]);
+					this.createTagEl(preview, this.formatTagOnShowHash(vaultTags[i]));
 					preview.createEl("span", { text: "=>" });
-					this.createTagEl(preview,this.formatTagForPreview(newTag));
+					this.createTagEl(preview,this.formatTagOnShowHash(newTag));
 					foundMatch = true;
 					break;
 				}
 			}
 
+			// if no tags exist, let the user know in the case there is a typo
+			// or that no matches is unexpected.
 			if (!foundMatch) {
-				var msg = preview.createEl("span", {text:"No matching tags currently in vault."});
+				let msg = preview.createEl("span", {text:"No matching tags currently in vault."});
 				Object.assign(msg, {className:"setting-item-description"});
 			}
 		});
 
 		// creates the "add" button at the end
-		var div = el.createDiv();
+		let div = el.createDiv();
 		new obsidian.Setting(div)
 			.addButton((btn) => {
 				btn.setButtonText("Add");
-				btn.setTooltip("Add another matching expression");
+				btn.setTooltip("Add another matching expression.");
 				btn.onClick(async (_) => {
 					this.plugin.settings.tags.push("#parent/tag");
 					this.plugin.saveSettings();
@@ -197,17 +191,17 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 	// creates the basic elements for the "preview" that is displayed
 	// under setting to immediately show their impact.
 	createExampleBlock(el) {
-		var example = el.createEl("span");
+		let example = el.createEl("span");
 		Object.assign(example, {
 			className: "snsvrno-tags-example",
 		});
 
-		var exampletext = example.createEl("p", { text: "Preview:" });
+		let exampletext = example.createEl("p", { text: "Preview:" });
 		Object.assign(exampletext, {
 			className: "snsvrno-tags-example-text",
 		});
 
-		var examplecontainer = example.createEl("span");
+		let examplecontainer = example.createEl("span");
 		Object.assign(examplecontainer, {
 			className: "snsvrno-tags-example-container",
 		});
@@ -215,23 +209,22 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 		return examplecontainer;
 	}
 
+	// creates the tag element with the correct classes
 	createTagEl(el, text) {
-		var tag = el.createEl("a", { text: text })
+		let tag = el.createEl("a", { text: text })
 		Object.assign(tag, {
 			className: "tag"
 		});
 		return tag;
 	}
 
-	/**
-	 * will strip off the # if that option in enabled
-	 */
-	formatTagForPreview(tagName) {
+
+	// formats the tag based on the `ShowHash` setting
+	// tagName : string - expecting something like `#example/tag`
+	formatTagOnShowHash(tagName) {
 		if (!this.plugin.settings.showHash) return tagName.substring(1);
 		else return tagName;
 	}
-
-
 
 }
 
@@ -270,10 +263,18 @@ class fn {
 	 * tag : string - the tag to shorten
 	 */
 	static tagSplitShorten(search, tag) {
-		console.log(search);
-		console.log(tag);
 		var newTag = tag.split("/").slice(search.length).join("/");
 		return "#" + newTag;
+	}
+
+	static splitDef(tag) {
+		let sections;
+		if (tag.substring(0,1) == "#") sections = tag.substring(1).split("/");
+		else sections = tag.split("/");
+
+		// get rid of the "" at the end if they write "#tag/"
+		if (sections[sections.length - 1] == "") sections.pop();
+		return sections;
 	}
 }
 
