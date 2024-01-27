@@ -23,3 +23,15 @@
 	font-size: 1.0em;
 	font-family: var(--font-monospace);
 }
+
+.snsvrno-tags-keyword-div {
+	padding-left: 10px;
+}
+
+.snsvrno-tags-keyword {
+	font-family: var(--font-monospace);
+	color: var(--code-keyword);
+	background: var(--code-background);
+	padding: 1px 4px;
+	border-radius: 4px;
+}

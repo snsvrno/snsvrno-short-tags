@@ -118,7 +118,17 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 		let setting = new obsidian.Setting(el)
 			.setName("Tags")
 			.setDesc("List of tag parents for shortening in preview mode.");
-		setting.descEl.createEl("div", {text:"Currently only supports exact matching"});
+		setting.descEl.createEl("div", {text:"Available wildcards:"});
+		// rules
+		let line1 = setting.descEl.createEl("div");
+		Object.assign(line1,{ className: "snsvrno-tags-keyword-div"});
+		Object.assign(line1.createEl("span", {text:"*"}), {
+			className: "snsvrno-tags-keyword"
+		});
+		line1.createEl("span",{text:" matches all characters except for "});
+		Object.assign(line1.createEl("span", {text:"/"}), {
+			className: "snsvrno-tags-keyword"
+		});
 
 		// creates a new line for each user tag setting
 		let vaultTags = Object.keys(app.metadataCache.getTags());
@@ -151,15 +161,18 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 
 			// building the preview for this definition
 			let preview = this.createExampleBlock(setting.descEl);
-			let defSections = fn.splitDef(tagDef);
+			const tagDefReg = fn.makeReg(tagDef);
 			// match them to the database
 			let foundMatch = false;
 			let matchCount = 0;
 			for (let i = 0; i < vaultTags.length; i++) {
-				if (fn.tagSplitMatch(defSections, vaultTags[i])) {
+				if (vaultTags[i].match(tagDefReg)) {
+					// this happens on the 2nd+ match so we can get the
+					// counts but don't need to make the preview anymore
 					if (foundMatch) matchCount += 1;
 					else {
-						let newTag = fn.tagSplitShorten(defSections, vaultTags[i]);
+						//let newTag = fn.tagSplitShorten(defSections, vaultTags[i]);
+						let newTag = vaultTags[i].replace(tagDefReg,"");
 						this.createTagEl(preview, this.formatTagOnShowHash(vaultTags[i]));
 						preview.createEl("span", { text: "=>" });
 						this.createTagEl(preview,this.formatTagOnShowHash(newTag));
@@ -232,8 +245,13 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 	// formats the tag based on the `ShowHash` setting
 	// tagName : string - expecting something like `#example/tag`
 	formatTagOnShowHash(tagName) {
-		if (!this.plugin.settings.showHash) return tagName.substring(1);
-		else return tagName;
+		if (this.plugin.settings.showHash) {
+			if (tagName.charAt(0) == "#") return tagName;
+			else return "#" + tagName;
+		} else {
+			if (tagName.charAt(0) == "#") return tagName.substring(1);
+			else return tagName;
+		}
 	}
 
 }
@@ -241,54 +259,10 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 ///////////////////////////////////////////////////////////////////////
 
 class fn {
-	/**
-	 * will return boolean based on if we match or not
-	 * seach : Array<string> - the tag shorten prefix
-	 * tag : string - the tag to shorten
-	 */
-	static tagSplitMatch(search, tag) {
-
-		// if we have a match string of #
-		if (search.length == 0) return false;
-
-		// removes the "#" and then splits by "/"
-		var split = tag.substring(1).split("/");
-
-		if (search.length > split.length) return false;
-
-		var j = 0;
-		var found = true;
-
-		while (j < split.length && j < search.length) {
-			if (split[j] != search[j]) {
-				found = false;
-			}
-			j += 1;
-		}
-
-		if (found && split.length != search.length) return true
-		else return false;
-	}
-
-	/**
-	 * !! DOES NOT CHECK ANYTHING !!
-	 * will return the shortened tag name with "#"
-	 * seach : Array<string> - the tag shorten prefix
-	 * tag : string - the tag to shorten
-	 */
-	static tagSplitShorten(search, tag) {
-		var newTag = tag.split("/").slice(search.length).join("/");
-		return "#" + newTag;
-	}
-
-	static splitDef(tag) {
-		let sections;
-		if (tag.substring(0,1) == "#") sections = tag.substring(1).split("/");
-		else sections = tag.split("/");
-
-		// get rid of the "" at the end if they write "#tag/"
-		if (sections[sections.length - 1] == "") sections.pop();
-		return sections;
+	static makeReg(def) {
+		if (def.substring(def.length-1,1) != "/") def = def += "/";
+		let reg = new RegExp(def.replaceAll("*", "[^\/]*"))
+		return reg;
 	}
 }
 
