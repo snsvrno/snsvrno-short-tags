@@ -237,6 +237,10 @@ class fn {
 	 * tag : string - the tag to shorten
 	 */
 	static tagSplitMatch(search, tag) {
+
+		// if we have a match string of #
+		if (search.length == 0) return false;
+
 		// removes the "#" and then splits by "/"
 		var split = tag.substring(1).split("/");
 
