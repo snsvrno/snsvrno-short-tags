@@ -115,9 +115,10 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 	//                     settings update as the user types)
 	opTags(el, focusId) {
 
-		new obsidian.Setting(el)
+		let setting = new obsidian.Setting(el)
 			.setName("Tags")
 			.setDesc("List of tag parents for shortening in preview mode.");
+		setting.descEl.createEl("div", {text:"Currently only supports exact matching"});
 
 		// creates a new line for each user tag setting
 		let vaultTags = Object.keys(app.metadataCache.getTags());
