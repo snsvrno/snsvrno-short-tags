@@ -61,9 +61,7 @@ class SnsvrnoTagsPlugin extends obsidian.Plugin {
 			const reftag = fn.makeReg(this.settings.tags[i]);
 
 			if (el.text.match(reftag)) {
-				// we need to replace the "#" because we are removing it
-				// with the regex replace
-				el.text = "#" + el.text.replace(reftag, "");
+				el.text = el.text.replace(reftag, "");
 
 				///////////////////////////////////
 				// adds the class
@@ -79,14 +77,12 @@ class SnsvrnoTagsPlugin extends obsidian.Plugin {
 			el.title = original;
 
 			if (this.settings.shortenAll)
-				// we need to replace the "#" because we are removing it
-				// with the regex replace
-				el.text = "#" + el.text.split("/").pop();
+				el.text = el.text.split("/").pop();
 		}
 
 		//////////////////////////////////
-		// removes the "hash" if that is enabled
-		if (!this.settings.showHash) el.text = el.text.substring(1);
+		// displays # or not based on the settings
+		el.text = fn.formatTagOnShowHash(this, el.text);
 	}
 }
 
@@ -160,7 +156,7 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 		let previewBlock = this.createExampleBlock(setting.descEl);
 		let previewTagName = Object.keys(app.metadataCache.getTags())[0];
 		let previewTag = previewBlock.createEl("a", {
-			text: this.formatTagOnShowHash(previewTagName ? previewTagName : "#example/tag")
+			text: fn.formatTagOnShowHash(this.plugin, previewTagName ? previewTagName : "#example/tag")
 		});
 		Object.assign(previewTag, {
 			className: "tag"
@@ -230,11 +226,11 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 					if (foundMatch) matchCount += 1;
 					else {
 						let newTag = vaultTags[i].replace(tagDefReg,"");
-						this.createTagEl(preview, this.formatTagOnShowHash(vaultTags[i]));
+						this.createTagEl(preview, fn.formatTagOnShowHash(this.plugin, vaultTags[i]));
 						preview.createEl("span", { text: "=>" });
 						let newcls;
 						if (this.plugin.settings.createCssForShorten) newcls = fn.generateClassName(tagDef);
-						this.createTagEl(preview,this.formatTagOnShowHash(newTag), newcls);
+						this.createTagEl(preview,fn.formatTagOnShowHash(this.plugin, newTag), newcls);
 						foundMatch = true;
 						matchCount = 1;
 					}
@@ -310,11 +306,16 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 		return tag;
 	}
 
+}
+
+///////////////////////////////////////////////////////////////////////
+
+class fn {
 
 	// formats the tag based on the `ShowHash` setting
-	// tagName : string - expecting something like `#example/tag`
-	formatTagOnShowHash(tagName) {
-		if (this.plugin.settings.showHash) {
+	// tagName : string - expecting something l
+	static formatTagOnShowHash(plugin, tagName) {
+		if (plugin.settings.showHash) {
 			if (tagName.charAt(0) == "#") return tagName;
 			else return "#" + tagName;
 		} else {
@@ -323,11 +324,6 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 		}
 	}
 
-}
-
-///////////////////////////////////////////////////////////////////////
-
-class fn {
 	static makeReg(def) {
 		if (def.substring(def.length-1,1) != "/") def = def += "/";
 		let reg = new RegExp(def.replaceAll("*", "[^\/]*"))
