@@ -51,8 +51,7 @@ class SnsvrnoTagsPlugin extends obsidian.Plugin {
 		// continue processing if its not
 		if (el.text.substring(0,1) != "#") return;
 
-
-		var shortened = false;
+		var original = el.text;
 
 		/////////////////////////////////
 		// shortens the tag if applicable
@@ -62,8 +61,6 @@ class SnsvrnoTagsPlugin extends obsidian.Plugin {
 			const reftag = fn.makeReg(this.settings.tags[i]);
 
 			if (el.text.match(reftag)) {
-				shortened = true;
-
 				// we need to replace the "#" because we are removing it
 				// with the regex replace
 				el.text = "#" + el.text.replace(reftag, "");
@@ -78,10 +75,13 @@ class SnsvrnoTagsPlugin extends obsidian.Plugin {
 		}
 
 
-		if (!shortened && this.settings.shortenAll) {
-			// we need to replace the "#" because we are removing it
-			// with the regex replace
-			el.text = "#" + el.text.split("/").pop();
+		if (el.text != original) {
+			el.title = original;
+
+			if (this.settings.shortenAll)
+				// we need to replace the "#" because we are removing it
+				// with the regex replace
+				el.text = "#" + el.text.split("/").pop();
 		}
 
 		//////////////////////////////////
