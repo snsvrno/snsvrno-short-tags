@@ -1,8 +1,11 @@
 let obsidian = require('obsidian');
 
 let DEFAULT_SETTINGS = {
+	// do we show the "#" for tags
 	showHash: true,
-	createCss: true,
+	// do we create a css for the shortened tags
+	createCssForShorten: true,
+	shortenAll:false,
 	tags: []
 };
 
@@ -48,6 +51,9 @@ class SnsvrnoTagsPlugin extends obsidian.Plugin {
 		// continue processing if its not
 		if (el.text.substring(0,1) != "#") return;
 
+
+		var shortened = false;
+
 		/////////////////////////////////
 		// shortens the tag if applicable
 		for (let i = 0; i < this.settings.tags.length; i++) {
@@ -56,19 +62,27 @@ class SnsvrnoTagsPlugin extends obsidian.Plugin {
 			const reftag = fn.makeReg(this.settings.tags[i]);
 
 			if (el.text.match(reftag)) {
+				shortened = true;
+
 				// we need to replace the "#" because we are removing it
 				// with the regex replace
 				el.text = "#" + el.text.replace(reftag, "");
 
 				///////////////////////////////////
 				// adds the class
-				if (this.settings.createCss)
+				if (this.settings.createCssForShorten)
 					el.className = el.className + " " + fn.generateClassName(this.settings.tags[i]);
 
 				break;
 			}
 		}
 
+
+		if (!shortened && this.settings.shortenAll) {
+			// we need to replace the "#" because we are removing it
+			// with the regex replace
+			el.text = "#" + el.text.split("/").pop();
+		}
 
 		//////////////////////////////////
 		// removes the "hash" if that is enabled
@@ -88,20 +102,37 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 	display(focusId) {
 		this.containerEl.empty();
 		this.opShowHash(this.containerEl);
-		this.opCreateCss(this.containerEl);
+		this.opCreateCssForShorten(this.containerEl);
+		this.opShortenAll(this.containerEl);
 		this.opTags(this.containerEl, focusId);
 	}
 
+	////////////////////////////////////
+	opShortenAll(el) {
+		const opt = new obsidian.Setting(el)
+			.setName("Shorten All Tags")
+			.setDesc("Shorten the display of all tags to only the lowest level child.")
+			.addToggle(t => t
+				.setValue(this.plugin.settings.shortenAll)
+				.onChange(async (v) => {
+					this.plugin.settings.shortenAll = v;
+					this.plugin.saveSettings();
+					this.display();
+				})
+			);
+
+		opt.descEl.createEl("div", {text: "Shorten definitions will still apply, and will take priority over this shortening methodology."});
+	}
 
 	////////////////////////////////////
-	opCreateCss(el) {
+	opCreateCssForShorten(el) {
 		new obsidian.Setting(el)
-			.setName("Create CSS Class")
+			.setName("Create CSS Class for Shortened")
 			.setDesc("Creates a CSS class for each tag that is shortened.")
 			.addToggle(t => t
-				.setValue(this.plugin.settings.createCss)
+				.setValue(this.plugin.settings.createCssForShorten)
 				.onChange(async (v) => {
-					this.plugin.settings.createCss = v;
+					this.plugin.settings.createCssForShorten = v;
 					this.plugin.saveSettings();
 					this.display();
 				})
@@ -202,7 +233,7 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 						this.createTagEl(preview, this.formatTagOnShowHash(vaultTags[i]));
 						preview.createEl("span", { text: "=>" });
 						let newcls;
-						if (this.plugin.settings.createCss) newcls = fn.generateClassName(tagDef);
+						if (this.plugin.settings.createCssForShorten) newcls = fn.generateClassName(tagDef);
 						this.createTagEl(preview,this.formatTagOnShowHash(newTag), newcls);
 						foundMatch = true;
 						matchCount = 1;
@@ -222,7 +253,7 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 					.createEl("span", { text: matchCount });
 				Object.assign(matchesEl, {className: "snsvrno-tags-matches-count"});
 
-				if (this.plugin.settings.createCss) {
+				if (this.plugin.settings.createCssForShorten) {
 					let cls = fn.generateClassName(tagDef);
 					let cssClass = this
 						.createExampleBlock(setting.descEl, "CSS class:")
