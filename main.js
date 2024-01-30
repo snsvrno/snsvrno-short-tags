@@ -2,6 +2,7 @@ let obsidian = require('obsidian');
 
 let DEFAULT_SETTINGS = {
 	showHash: true,
+	createCss: true,
 	tags: []
 };
 
@@ -58,9 +59,16 @@ class SnsvrnoTagsPlugin extends obsidian.Plugin {
 				// we need to replace the "#" because we are removing it
 				// with the regex replace
 				el.text = "#" + el.text.replace(reftag, "");
+
+				///////////////////////////////////
+				// adds the class
+				if (this.settings.createCss)
+					el.className = el.className + " " + fn.generateClassName(this.settings.tags[i]);
+
 				break;
 			}
 		}
+
 
 		//////////////////////////////////
 		// removes the "hash" if that is enabled
@@ -80,7 +88,24 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 	display(focusId) {
 		this.containerEl.empty();
 		this.opShowHash(this.containerEl);
+		this.opCreateCss(this.containerEl);
 		this.opTags(this.containerEl, focusId);
+	}
+
+
+	////////////////////////////////////
+	opCreateCss(el) {
+		new obsidian.Setting(el)
+			.setName("Create CSS Class")
+			.setDesc("Creates a CSS class for each tag that is shortened.")
+			.addToggle(t => t
+				.setValue(this.plugin.settings.createCss)
+				.onChange(async (v) => {
+					this.plugin.settings.createCss = v;
+					this.plugin.saveSettings();
+					this.display();
+				})
+			);
 	}
 
 	////////////////////////////////////
@@ -173,11 +198,12 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 					// counts but don't need to make the preview anymore
 					if (foundMatch) matchCount += 1;
 					else {
-						//let newTag = fn.tagSplitShorten(defSections, vaultTags[i]);
 						let newTag = vaultTags[i].replace(tagDefReg,"");
 						this.createTagEl(preview, this.formatTagOnShowHash(vaultTags[i]));
 						preview.createEl("span", { text: "=>" });
-						this.createTagEl(preview,this.formatTagOnShowHash(newTag));
+						let newcls;
+						if (this.plugin.settings.createCss) newcls = fn.generateClassName(tagDef);
+						this.createTagEl(preview,this.formatTagOnShowHash(newTag), newcls);
 						foundMatch = true;
 						matchCount = 1;
 					}
@@ -190,10 +216,20 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 				let msg = preview.createEl("span", {text:"No matching tags currently in vault."});
 				Object.assign(msg, {className:"setting-item-description"});
 			} else {
+
 				let matchesEl = this
 					.createExampleBlock(setting.descEl, "Unique tag matches:")
-					.createEl("span", { text: matchCount })
+					.createEl("span", { text: matchCount });
 				Object.assign(matchesEl, {className: "snsvrno-tags-matches-count"});
+
+				if (this.plugin.settings.createCss) {
+					let cls = fn.generateClassName(tagDef);
+					let cssClass = this
+						.createExampleBlock(setting.descEl, "CSS class:")
+						.createEl("span", {text: cls});
+					Object.assign(cssClass, {className: "snsvrno-tags-class"});
+				}
+
 			}
 		});
 
@@ -235,10 +271,10 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 	}
 
 	// creates the tag element with the correct classes
-	createTagEl(el, text) {
+	createTagEl(el, text, otherClass) {
 		let tag = el.createEl("a", { text: text })
 		Object.assign(tag, {
-			className: "tag"
+			className: "tag" + (otherClass ? " " + otherClass : "")
 		});
 		return tag;
 	}
@@ -265,6 +301,13 @@ class fn {
 		if (def.substring(def.length-1,1) != "/") def = def += "/";
 		let reg = new RegExp(def.replaceAll("*", "[^\/]*"))
 		return reg;
+	}
+
+	static generateClassName(def) {
+		let name = def.substring(1);
+		name = name.replaceAll("*","wc");
+		name = name.replaceAll("/","_");
+		return "tag-"+ name;
 	}
 }
 
