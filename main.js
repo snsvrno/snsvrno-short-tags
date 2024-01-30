@@ -52,10 +52,12 @@ class SnsvrnoTagsPlugin extends obsidian.Plugin {
 		for (let i = 0; i < this.settings.tags.length; i++) {
 			// [OTGI0004] look at caching these so that we are not calculating
 			// it for every page and tag
-			let reftag = this.settings.tags[i].substring(1).split("/");
+			const reftag = fn.makeReg(this.settings.tags[i]);
 
-			if (fn.tagSplitMatch(reftag,el.text)) {
-				el.text = fn.tagSplitShorten(reftag, el.text);
+			if (el.text.match(reftag)) {
+				// we need to replace the "#" because we are removing it
+				// with the regex replace
+				el.text = "#" + el.text.replace(reftag, "");
 				break;
 			}
 		}
