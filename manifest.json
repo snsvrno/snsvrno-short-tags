@@ -1,7 +1,7 @@
 {
 	"id": "snsvrno-tags",
 	"name": "Tag Formatter",
-	"version": "0.1.0",
+	"version": "0.1.2",
 	"minAppVersion": "0.15.0",
 	"description": "Gives more options on how to display tags in preview mode.",
 	"author": "snsvrno",
