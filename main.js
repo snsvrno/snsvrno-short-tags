@@ -218,7 +218,7 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 		// the preview showing if and how the hash will be
 		// displayed
 		let previewBlock = this.createExampleBlock(setting.descEl);
-		let tag = fn.getTagsSingle("#example-tag");
+		let tag = this.getTagsSingle("#example-tag");
 
 		let cls = fn.generateClassName(tag);
 		this.createTagEl(
@@ -241,7 +241,7 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 		// the preview showing if and how the hash will be
 		// displayed
 		let previewBlock = this.createExampleBlock(setting.descEl);
-		let tag = fn.getTagsLong("#example/tag");
+		let tag = this.getTagsLong("#example/tag");
 
 		let cls = fn.generateClassName(fn.parents(tag));
 		this.createTagEl(
@@ -263,7 +263,7 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 
 		// the preview showing if and how the hash will be
 		// displayed
-		let previewTagName = fn.getTagsLong("#example/tag");
+		let previewTagName = this.getTagsLong("#example/tag");
 		this.createTagEl(
 			this.createExampleBlock(setting.descEl),
 			this.plugin.formatTagHash(previewTagName)
@@ -398,7 +398,7 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 		const tagDefReg = fn.makeReg(def);
 		let foundMatch = false;
 		let matchCount = 0;
-		let vaultTags = Object.keys(app.metadataCache.getTags());
+		let vaultTags = Object.keys(this.plugin.app.metadataCache.getTags());
 		for (let i = 0; i < vaultTags.length; i++) {
 			if (vaultTags[i].match(tagDefReg)) {
 				// this happens on the 2nd+ match so we can get the
@@ -441,6 +441,30 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 
 		return setting;
 	}
+
+	// gets a tag that has parents
+	// ifnull : string - what to return if we don't find anything
+	getTagsLong(ifnull) {
+		const tags = Object.keys(this.app.metadataCache.getTags());
+		for (let i = 0; i < tags.length; i++) {
+			if (tags[i].split("/").length > 1) {
+				return tags[i];
+			}
+		}
+		return ifnull;
+	}
+
+	// gets a tag that has no parents
+	// ifnull : string - what to return if we don't find anything
+	getTagsSingle(ifnull) {
+		const tags = Object.keys(this.app.metadataCache.getTags());
+		for (let i = 0; i < tags.length; i++) {
+			if (tags[i].split("/").length == 1) {
+				return tags[i];
+			}
+		}
+		return ifnull;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -458,30 +482,6 @@ class fn {
 		name = name.replaceAll("*","wc");
 		name = name.replaceAll("/","_");
 		return "tag-"+ name;
-	}
-
-	// gets a tag that has parents
-	// ifnull : string - what to return if we don't find anything
-	static getTagsLong(ifnull) {
-		const tags = Object.keys(app.metadataCache.getTags());
-		for (let i = 0; i < tags.length; i++) {
-			if (tags[i].split("/").length > 1) {
-				return tags[i];
-			}
-		}
-		return ifnull;
-	}
-
-	// gets a tag that has no parents
-	// ifnull : string - what to return if we don't find anything
-	static getTagsSingle(ifnull) {
-		const tags = Object.keys(app.metadataCache.getTags());
-		for (let i = 0; i < tags.length; i++) {
-			if (tags[i].split("/").length == 1) {
-				return tags[i];
-			}
-		}
-		return ifnull;
 	}
 
 	static parents(tag) {
