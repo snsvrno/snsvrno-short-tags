@@ -1,3 +1,14 @@
+.snsvrno-tags-def-preview {
+	display: block !important;
+}
+
+.snsvrno-tags-def {
+	background: var(--code-background);
+	padding: 3px 10px;
+	margin: 10px 0px;
+	border-radius: 10px;
+}
+
 .snsvrno-tags-example {
 	display: flex;
 	align-items: center;
@@ -22,6 +33,8 @@
 .snsvrno-tags-matches-count {
 	font-size: 1.0em;
 	font-family: var(--font-monospace);
+	color: var(--code-important);
+	font-weight: bold;
 }
 
 .snsvrno-tags-keyword-div {
@@ -34,4 +47,10 @@
 	background: var(--code-background);
 	padding: 1px 4px;
 	border-radius: 4px;
+}
+
+.snsvrno-tags-class {
+	color: var(--code-function);
+	font-family: var(--font-monospace);
+	font-style: italic;
 }
