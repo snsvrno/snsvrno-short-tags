@@ -14,7 +14,7 @@ Settings
 
 ![](images/settings.png)
 
-## v0.1.0 Features
+## v0.1.5 Features
 
 - Hide the "#" on tags.
 - Hide parents for all nested tags.

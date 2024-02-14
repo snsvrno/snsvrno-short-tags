@@ -229,8 +229,10 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 
 		let cssClass = this
 			.createExampleBlock(setting.descEl,STRINGS.preview.css)
-			.createEl("span", {text:cls});
-		Object.assign(cssClass, {className:CSS.class});
+			.createEl("span", {
+				text: cls,
+				cls: CSS.class
+			});
 	}
 
 	////////////////////////////////////
@@ -252,8 +254,10 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 
 		let cssClass = this
 			.createExampleBlock(setting.descEl, STRINGS.preview.css)
-			.createEl("span", {text:cls});
-		Object.assign(cssClass, {className:CSS.class});
+			.createEl("span", {
+				text: cls,
+				cls: CSS.class
+			});
 	}
 
 	////////////////////////////////////
@@ -282,11 +286,10 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 		setting.descEl.createEl("div", {text:"Available wildcards:"});
 
 		// rules
-		let line1 = setting.descEl.createEl("div");
-		Object.assign(line1,{ className:CSS.keydiv});
-		Object.assign(line1.createEl("span", {text:"*"}), {className:CSS.key});
-		line1.createEl("span",{text:" matches all characters except for "});
-		Object.assign(line1.createEl("span", {text:"/"}), {className:CSS.key});
+		let line1 = setting.descEl.createEl("div", { cls:CSS.keydiv });
+		line1.createEl("span", { text:"*", cls:CSS.key });
+		line1.createEl("span", { text:" matches all characters except for " });
+		line1.createEl("span", { text:"/", cls:CSS.key });
 
 		// creates a new line for each user tag setting
 
@@ -313,25 +316,28 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 	// creates the basic elements for the "preview" that is displayed
 	// under setting to immediately show their impact.
 	createExampleBlock(el, text, spanclass) {
-		let example = el.createEl("span");
-		Object.assign(example, {className: CSS.exspan});
-		if (spanclass != undefined) example.className += " " + spanclass;
+		let example = el.createEl("span", {
+			cls: CSS.exspan + (spanclass != undefined ? " " + spanclass : "")
+		});
 
-		let exampletext = example.createEl("p", {text: text ? text : STRINGS.preview.text});
-		Object.assign(exampletext, {className: CSS.extext});
+		let exampletext = example.createEl("p", {
+			text: text ? text : STRINGS.preview.text,
+			cls: CSS.extext
+		});
 
-		let examplecontainer = example.createEl("div");
-		Object.assign(examplecontainer, {className: CSS.exdiv});
+		let examplecontainer = example.createEl("div", {
+			cls: CSS.exdiv
+		});
 
 		return examplecontainer;
 	}
 
 	// creates the tag element with the correct classes
 	createTagEl(el, text, otherClass) {
-		let tag = el.createEl("a", { text: text })
-		Object.assign(tag, {
-			className: "tag" + (otherClass ? " " + otherClass : "")
-		});
+		let tag = el.createEl("a", {
+			text: text,
+			cls: "tag" + (otherClass ? " " + otherClass : "")
+		})
 		return tag;
 	}
 
@@ -421,21 +427,26 @@ class SnsvrnoTagsSettingsTab extends obsidian.PluginSettingTab {
 		// if no tags exist, let the user know in the case there is a typo
 		// or that no matches is unexpected.
 		if (!foundMatch) {
-			let msg = preview.createEl("span", {text:STRINGS.notag});
-			Object.assign(msg, {className:"setting-item-description"});
+			preview.createEl("span", {
+				text: STRINGS.notag,
+				cls: "setting-item-description"
+			});
 		} else {
-
 			let matchesEl = this
 				.createExampleBlock(setting.descEl, "Unique tag matches:")
-				.createEl("span", {text:matchCount});
-			Object.assign(matchesEl, {className:CSS.count});
+				.createEl("span", {
+					text: matchCount,
+					cls: CSS.count
+				});
 
 			if (this.plugin.settings.cssForShorten) {
 				let cls = fn.generateClassName(def);
 				let cssClass = this
 					.createExampleBlock(setting.descEl,STRINGS.preview.css)
-					.createEl("span", {text:cls});
-				Object.assign(cssClass, {className:CSS.class});
+					.createEl("span", {
+						text: cls,
+						cls: CSS.class
+					});
 			}
 		}
 
